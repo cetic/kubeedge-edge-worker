@@ -1,0 +1,43 @@
+apiVersion: devices.kubeedge.io/v1alpha2
+kind: Device
+metadata:
+  name: edge-worker-01
+  labels:
+    description: 'prodev'
+    manufacturer: 'test'
+spec:
+  deviceModelRef:
+    name: edge-worker
+  nodeSelector:
+    nodeSelectorTerms:
+    - matchExpressions:
+      - key: ''
+        operator: In
+        values:
+        - edgenode1
+
+status:
+  twins:
+    - propertyName: job
+      desired:
+        metadata:
+          type: string
+        value: "Launch"
+      reported:
+        metadata:
+          type: string
+        value: "None"
+    - propertyName: arg
+      desired:
+        metadata:
+          type: string
+        value: "main.py"
+      reported:
+        metadata:
+          type: string
+        value: "None"
+    - propertyName: status
+      desired:
+        metadata:
+          type: string
+        value: ''

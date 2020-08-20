@@ -1,0 +1,25 @@
+apiVersion: devices.kubeedge.io/v1alpha2
+kind: DeviceModel
+metadata:
+ name: edge-worker
+ namespace: default
+spec:
+ properties:
+  - name: status
+    description: status
+    type:
+     string:
+      accessMode: ReadOnly
+      defaultValue: 'NotReady'
+  - name: job
+    description: job
+    type:
+     string:
+      accessMode: ReadWrite
+      defaultValue: 'None'
+  - name: arg
+    description: arg
+    type:
+     string:
+      accessMode: ReadWrite
+      defaultValue: 'None'

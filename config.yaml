@@ -1,0 +1,9 @@
+type: CPU
+model: MacBook-Pro
+DeviceID: edge-worker-01
+launchers: python3
+broker:
+  host: 10.134.2.58
+  port: 1883
+sourcepath:
+  "/Users/tse/CETIC/viaduct/POCEdge/edged-controlled-device"
