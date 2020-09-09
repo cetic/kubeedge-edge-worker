@@ -108,7 +108,7 @@ func (d *Device) download() {
     //try to download the file with wget tools
     _, err := exec.Command("wget","-P",d.Path,d.arg).Output()
   	if err != nil {
-      d.sendTwinActualValue("error")
+      d.sendTwinActualValue("404")
   		log.Println(err)
   	} else {
         d.sendTwinActualValue("done")
@@ -121,7 +121,7 @@ func (d *Device) run() {
   args := strings.Split(d.arg," ")
   out, err := exec.Command(d.Launcher,args...).Output()
   if err != nil {
-      d.sendTwinActualValue("404")
+      d.sendTwinActualValue("error")
       log.Println(err)
   } else {
      d.sendTwinActualValue("done")

@@ -1,0 +1,9 @@
+type: CPU
+model: Matrix
+DeviceID: edge-worker-01
+launchers: docker
+broker:
+  host: localhost
+  port: 1883
+sourcepath:
+  "/app"
