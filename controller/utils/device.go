@@ -58,35 +58,22 @@ func CreateDevice(id,ns string,crdClient *rest.RESTClient) (Device,error) {
   		"ready",
   		fsm.Events{
   			{Name: "LaunchTask",       Src: []string{"ready"     }, Dst: "run"     },
-  			{Name: "TaskCompleted",     Src: []string{"run"       }, Dst: "done"    },
+  			{Name: "TaskCompleted",     Src: []string{"run","Download"}, Dst: "done"    },
         {Name: "FileNotFound",     Src: []string{"run"       }, Dst: "download"},
-        {Name: "DownloadComplete", Src: []string{"download"  }, Dst: "done"    },
         {Name: "Finishing",        Src: []string{"done"      }, Dst: "ready"   },
         {Name: "DownloadError",    Src: []string{"download"  }, Dst: "error"   },
         {Name: "TaskError",        Src: []string{"run"       }, Dst: "error"   },
         {Name: "Waiting",          Src: []string{"ready" ,"done"}, Dst: "ready"   },
   		},
   		fsm.Callbacks{
-        "DownloadComplete": func(e *fsm.Event) {
-          s.AddDesiredJob("Wait")
-          s.AddDesiredArg("")
-          s.PatchStatus(s.crdClient)
-          for s.GetStatus() != "Waiting"{
-            s.SyncStatus(s.crdClient)
-          }
-          s.FSM.Event("Finishing")
-        },
         "TaskCompleted": func(e *fsm.Event) {
-          log.Println("hello")
           s.AddDesiredJob("Wait")
           s.AddDesiredArg("finished")
           s.PatchStatus(s.crdClient)
           for s.GetStatus() != "Waiting"{
-            log.Println(s.GetStatus())
             s.SyncStatus(s.crdClient)
             time.Sleep(1*time.Second)
           }
-          log.Println(s.FSM.Current())
         },
       },
   	)
@@ -95,22 +82,26 @@ func CreateDevice(id,ns string,crdClient *rest.RESTClient) (Device,error) {
 
 
 func (s* Device) Launch(filename,url string){
+  log.Println("Launch app request")
   s.FSM.Event("LaunchTask")
   s.AddDesiredJob("Launch")
   s.AddDesiredArg(filename)
   s.PatchStatus(s.crdClient)
-  for s.FSM.Current() != "Waiting"{
+  for s.FSM.Current()!="ready"{
     s.SyncStatus(s.crdClient)
-    log.Println(s.FSM.Current())
-    log.Println(s.GetStatus())
     s.FSM.Event(s.GetStatus())
     if s.GetStatus() == "FileNotFound" {
       s.AddDesiredJob("Download")
       s.AddDesiredArg(url)
       s.PatchStatus(s.crdClient)
+      for s.FSM.Current()!="ready"{
+        s.SyncStatus(s.crdClient)
+        s.FSM.Event(s.GetStatus())
+      }  
     }
     time.Sleep(1*time.Second)
   }
+  log.Println("app launched")
 }
 
 func (s* Device) AddDesiredJob(job string){

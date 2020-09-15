@@ -111,7 +111,7 @@ func (d *Device) download() {
       d.sendTwinActualValue("DownloadError")
   		log.Println(err)
   	} else {
-        d.sendTwinActualValue("DownloadComplete")
+        d.sendTwinActualValue("TaskCompleted")
     }
 }
 
