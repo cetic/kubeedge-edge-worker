@@ -8,6 +8,9 @@ import(
   "syscall"
   "os"
   "os/exec"
+  "bufio"
+  "fmt"
+  "io"
   mqtt "github.com/eclipse/paho.mqtt.golang"
   "encoding/json"
   "strings"
@@ -26,6 +29,7 @@ type Device struct {
   status string
   job string
   arg string
+  Stop chan string
 }
 
 
@@ -68,7 +72,6 @@ func (d *Device) Listen() {
 		os.Exit(0)
 	}()
   // Still App Open
-
   for{}
 }
 
@@ -89,11 +92,13 @@ func (d *Device) action(m mqtt.Message, client mqtt.Client,channel string) {
       d.arg = expectedArg
       switch d.job {
       case "Launch":
-        d.run()
+        d.run2()
       case "Download":
         d.download()
       case "Wait":
         d.sendTwinActualValue("Waiting")
+      case "Stop":
+        d.Stop <- "Stop"
       default:
         d.sendTwinActualValue("notavailable")
       }
@@ -111,9 +116,11 @@ func (d *Device) download() {
       d.sendTwinActualValue("DownloadError")
   		log.Println(err)
   	} else {
-        d.sendTwinActualValue("TaskCompleted")
+        d.sendTwinActualValue("LaunchTask")
     }
 }
+
+
 
 
 func (d *Device) run() {
@@ -126,6 +133,55 @@ func (d *Device) run() {
   } else {
      d.sendTwinActualValue("TaskCompleted")
      log.Printf("Execution output: %s",out)
+  }
+}
+
+
+func copyOutput(r io.Reader) {
+    scanner := bufio.NewScanner(r)
+    for scanner.Scan() {
+        fmt.Println(scanner.Text())
+    }
+}
+
+func (d *Device) run2() {
+  log.Printf("Run application request")
+  args := strings.Split(d.arg," ")
+  cmd:= exec.Command(d.Launcher,args...)
+  stdout, err := cmd.StdoutPipe()
+  if err != nil {
+      panic(err)
+  }
+  stderr, err := cmd.StderrPipe()
+  if err != nil {
+      panic(err)
+  }
+  err = cmd.Start()
+  if err != nil {
+      panic(err)
+  }
+
+  go copyOutput(stdout)
+  go copyOutput(stderr)
+  done := make(chan error, 1)
+  d.Stop = make(chan string)
+  go func() {
+      done <- cmd.Wait()
+  }()
+  select {
+  case msg := <-d.Stop:
+      log.Println(msg)
+      if err := cmd.Process.Kill(); err != nil {
+          log.Fatal("failed to kill process: ", err)
+      }
+      log.Println("process manually terminated")
+      d.sendTwinActualValue("TaskCompleted")
+  case err := <-done:
+      if err != nil {
+          log.Println("Process Terminated")
+      }
+      log.Print("process finished successfully")
+      d.sendTwinActualValue("TaskCompleted")
   }
 }
 

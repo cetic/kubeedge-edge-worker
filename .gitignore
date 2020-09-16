@@ -2,3 +2,5 @@ mqtt-handler.*
 .DS_Store
 mapper.arm
 mapper.linux.amd64
+/crds
+/tools
