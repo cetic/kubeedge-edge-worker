@@ -72,7 +72,9 @@ func (d *Device) Listen() {
 		os.Exit(0)
 	}()
   // Still App Open
-  for{}
+  for{
+
+  }
 }
 
 
@@ -96,9 +98,12 @@ func (d *Device) action(m mqtt.Message, client mqtt.Client,channel string) {
       case "Download":
         d.download()
       case "Wait":
+        log.Println("Waiting request")
         d.sendTwinActualValue("Waiting")
       case "Stop":
+        log.Println("Stop request")
         d.Stop <- "Stop"
+        d.sendTwinActualValue("TaskCompleted")
       default:
         d.sendTwinActualValue("notavailable")
       }
@@ -168,21 +173,24 @@ func (d *Device) run2() {
   go func() {
       done <- cmd.Wait()
   }()
-  select {
-  case msg := <-d.Stop:
-      log.Println(msg)
-      if err := cmd.Process.Kill(); err != nil {
-          log.Fatal("failed to kill process: ", err)
-      }
-      log.Println("process manually terminated")
-      d.sendTwinActualValue("TaskCompleted")
-  case err := <-done:
-      if err != nil {
-          log.Println("Process Terminated")
-      }
-      log.Print("process finished successfully")
-      d.sendTwinActualValue("TaskCompleted")
+  go func(){
+    select {
+    case msg := <-d.Stop:
+        log.Println(msg)
+        if err := cmd.Process.Kill(); err != nil {
+            log.Fatal("failed to kill process: ", err)
+        }
+        log.Println("process manually terminated")
+        d.sendTwinActualValue("TaskCompleted")
+    case err := <-done:
+        if err != nil {
+            log.Println("Process Terminated")
+        }
+        log.Print("process finished successfully")
+        d.sendTwinActualValue("TaskCompleted")
   }
+  }()
+
 }
 
 
