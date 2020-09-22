@@ -9,7 +9,6 @@ import(
   "os"
   "os/exec"
   "bufio"
-  "fmt"
   "io"
   mqtt "github.com/eclipse/paho.mqtt.golang"
   "encoding/json"
