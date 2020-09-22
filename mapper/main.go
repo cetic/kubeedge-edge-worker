@@ -2,7 +2,6 @@ package main
 
 import(
    lib "./lib"
-  //"fmt"
 )
 
 func main(){

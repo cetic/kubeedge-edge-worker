@@ -14,11 +14,10 @@ import(
   mqtt "github.com/eclipse/paho.mqtt.golang"
   "encoding/json"
   "strings"
-  //"time"
   "github.com/kubeedge/kubeedge/edge/pkg/devicetwin/dttype"
-  //"github.com/kubeedge/kubeedge/cloud/pkg/devicecontroller/types"
 )
 
+// Device Type
 type Device struct {
   Type string `yaml:"type"`
   Model string `yaml:"model"`
@@ -26,10 +25,12 @@ type Device struct {
   MQTT MQTT `yaml:"broker"`
   Path string `yaml:"sourcepath"`
   DeviceID string `yaml:"DeviceID"`
+  // Channel used to kill a running app
+  Stop chan string
+  // Twin Parameters
   status string
   job string
   arg string
-  Stop chan string
 }
 
 
@@ -40,6 +41,7 @@ const (
 )
 
 
+// Function used to parse a yaml file to a Device configuration
 func (d *Device) GetConfigFromFile(filename string){
   // Read file
   yamlFile, err := ioutil.ReadFile(filename)
@@ -54,6 +56,7 @@ func (d *Device) GetConfigFromFile(filename string){
 }
 
 
+//Function that initialise the Mapper and keep it open.
 func (d *Device) Listen() {
 	c := make(chan os.Signal)
   d.MQTT.Action = d.action
@@ -72,12 +75,11 @@ func (d *Device) Listen() {
 		os.Exit(0)
 	}()
   // Still App Open
-  for{
-
-  }
+  for{}
 }
 
 
+// Function called by the mqtt handler.
 func (d *Device) action(m mqtt.Message, client mqtt.Client,channel string) {
   if channel == DeviceETPrefix+d.DeviceID+TwinETUpdateDeltaSuffix {
     msg := &dttype.DeviceTwinUpdate{}
@@ -94,7 +96,7 @@ func (d *Device) action(m mqtt.Message, client mqtt.Client,channel string) {
       d.arg = expectedArg
       switch d.job {
       case "Launch":
-        d.run2()
+        d.run()
       case "Download":
         d.download()
       case "Wait":
@@ -112,7 +114,7 @@ func (d *Device) action(m mqtt.Message, client mqtt.Client,channel string) {
 }
 
 
-
+// Function used to download a file
 func (d *Device) download() {
     log.Printf("Download of file request : %s",d.arg)
     //try to download the file with wget tools
@@ -126,31 +128,17 @@ func (d *Device) download() {
 }
 
 
-
-
-func (d *Device) run() {
-  log.Printf("Run application request")
-  args := strings.Split(d.arg," ")
-  out, err := exec.Command(d.Launcher,args...).Output()
-  if err != nil {
-      d.sendTwinActualValue("FileNotFound")
-      log.Println(err)
-  } else {
-     d.sendTwinActualValue("TaskCompleted")
-     log.Printf("Execution output: %s",out)
-  }
-}
-
-
+// Function used to grep the log of the application launched
 func copyOutput(r io.Reader) {
     scanner := bufio.NewScanner(r)
     for scanner.Scan() {
-        fmt.Println(scanner.Text())
+        log.Printf("App : %s",scanner.Text())
     }
 }
 
-func (d *Device) run2() {
+func (d *Device) run() {
   log.Printf("Run application request")
+  // Create the Command that will be launched
   args := strings.Split(d.arg," ")
   cmd:= exec.Command(d.Launcher,args...)
   stdout, err := cmd.StdoutPipe()
@@ -166,13 +154,23 @@ func (d *Device) run2() {
       panic(err)
   }
 
+  //Threads that send the output of the Application to the standard output
   go copyOutput(stdout)
+
+  //Threads that send the error of the Application to the standard error
   go copyOutput(stderr)
+
   done := make(chan error, 1)
   d.Stop = make(chan string)
+
+  // Thread that triggers the end of the application
   go func() {
       done <- cmd.Wait()
   }()
+
+  // Thread that triggers the end of the launched application
+  // Either because there is a external request
+  // Either because the process is correctly terminated
   go func(){
     select {
     case msg := <-d.Stop:
@@ -188,9 +186,8 @@ func (d *Device) run2() {
         }
         log.Print("process finished successfully")
         d.sendTwinActualValue("TaskCompleted")
-  }
+    }
   }()
-
 }
 
 

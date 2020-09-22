@@ -1,20 +1,20 @@
 apiVersion: devices.kubeedge.io/v1alpha2
 kind: Device
 metadata:
-  name: edge-worker-01
+  name: edge-dev-01 #Device ID
   labels:
     description: 'prodev'
     manufacturer: 'test'
 spec:
   deviceModelRef:
-    name: edge-worker
+    name: edge-worker #Device Model
   nodeSelector:
     nodeSelectorTerms:
     - matchExpressions:
       - key: ''
         operator: In
         values:
-        - edgenode1
+        - rpigw1  #EdgeNode name
 
 status:
   twins:
@@ -22,7 +22,7 @@ status:
       desired:
         metadata:
           type: string
-        value: "Launch"
+        value: "Wait"
       reported:
         metadata:
           type: string
@@ -31,7 +31,7 @@ status:
       desired:
         metadata:
           type: string
-        value: "main.py"
+        value: "init"
       reported:
         metadata:
           type: string

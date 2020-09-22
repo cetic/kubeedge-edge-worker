@@ -100,7 +100,6 @@ func (s* Device) Launch(filename,url string){
   for s.FSM.Current() != "ready"{
     s.SyncStatus()
     s.FSM.Event(s.GetStatus())
-    //time.Sleep(500*time.Millisecond)
   }
 }
 
