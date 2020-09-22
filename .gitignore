@@ -1,7 +1,8 @@
 mqtt-handler.*
 .DS_Store
-mapper.arm
-mapper.linux.amd64
+mapper.armhf
+mapper.amd64
+mapper.arm64
 /crds
 /tools
 /mapper/config/myconfig.yaml
