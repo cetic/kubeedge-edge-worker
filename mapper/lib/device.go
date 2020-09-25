@@ -174,7 +174,7 @@ func (d *Device) run() {
     select {
     case msg := <-d.Stop:
         log.Println(msg)
-        if err := cmd.Process.Kill(); err != nil {
+        if err := cmd.Process.Terminate(); err != nil {
             log.Fatal("failed to kill process: ", err)
         }
         log.Println("process manually terminated")
