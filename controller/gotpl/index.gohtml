@@ -1,0 +1,18 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" type="text/css" href="/static/style.css">
+        <script src="/static/script.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+        <meta charset="utf-8">
+        <title>Page</title>
+    </head>
+    <body>
+    <div class="content">
+      {{template "content" .}}
+    </div>
+    </body>
+</html>
+{{end}}

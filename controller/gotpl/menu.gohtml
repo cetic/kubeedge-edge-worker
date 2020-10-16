@@ -1,0 +1,22 @@
+{{define "menu"}}
+    <table>
+      <tr>
+        <td>
+          <div id="wrapper" onclick="closeNav()">
+          <div class="circle icon">
+            <span class="line top"></span>
+            <span class="line middle"></span>
+            <span class="line bottom"></span>
+          </div>
+          </div>
+        </td>
+      </tr>
+      {{range $page := .}}
+        <tr>
+          <td><a href={{ $page.Path }}><i class="fas fa-{{ $page.Icon }}" style="font-size:32px;color:#0D6FBA;margin-right:15px"></i></a></td>
+          <td><a href={{ $page.Path }}>{{ $page.Name }}</a></td>
+        </tr>
+
+      {{end}}
+    </table>
+{{end}}

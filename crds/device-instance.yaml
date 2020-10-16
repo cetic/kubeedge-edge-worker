@@ -14,7 +14,7 @@ spec:
       - key: ''
         operator: In
         values:
-        - rpigw1  #EdgeNode name
+        - rpigw-edge  #EdgeNode name
 
 status:
   twins:
@@ -22,7 +22,7 @@ status:
       desired:
         metadata:
           type: string
-        value: "Wait"
+        value: "Launch"
       reported:
         metadata:
           type: string
@@ -31,7 +31,7 @@ status:
       desired:
         metadata:
           type: string
-        value: "init"
+        value: "test.py"
       reported:
         metadata:
           type: string

@@ -2,10 +2,11 @@ package main
 
 import(
    lib "./lib"
+   "os"
 )
 
 func main(){
   device := lib.Device{}
-  device.GetConfigFromFile("config/config.yaml")
+  device.GetConfigFromFile(os.Args[1])
   device.Listen()
 }
