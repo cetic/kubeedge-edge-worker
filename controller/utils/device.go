@@ -43,19 +43,22 @@ func (s* Device) InitDevice(id,ns string,crdClient *rest.RESTClient) error {
   s.DeviceID = id
   s.Namespace = ns
   s.crdClient = crdClient
-  s.AddDesiredJob("Wait")
-  s.AddDesiredArg("init")
-  _,err := s.PatchStatus()
-  if err != nil {
-    return err
-  }
-  log.Println("Waiting request sended")
-  for s.GetStatus() != "Waiting" {
-    s.SyncStatus()
+  s.SyncStatus()
+  if s.GetStatus() != "Waiting" {
+    s.AddDesiredJob("Wait")
+    s.AddDesiredArg("init")
+    _,err := s.PatchStatus()
     if err != nil {
       return err
     }
-    time.Sleep(500*time.Millisecond)
+    log.Println("Waiting request sended")
+    for s.GetStatus() != "Waiting" {
+      s.SyncStatus()
+      if err != nil {
+        return err
+      }
+      time.Sleep(500*time.Millisecond)
+    }
   }
   log.Println("Device Connected and Ready")
   s.FSM = fsm.NewFSM(
